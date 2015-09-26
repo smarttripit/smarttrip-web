@@ -32,4 +32,22 @@ public class UserController {
 		User user = this.userService.selectByPrimaryKey(userId);
 		return user;
 	}
+	
+	@RequestMapping("/gotoLogin")
+	public String gotoLogin(HttpServletRequest request,Model model){
+		return "login";
+	}
+	
+	@RequestMapping("/login")
+	public String showLogin(HttpServletRequest request,Model model){
+		String mobile = request.getParameter("mobile");
+		String password = request.getParameter("password");
+		User user = this.userService.selectByMobile(mobile);
+		if (user == null)return "login";
+		if (this.userService.checkPwd(user, password)){
+			//session 中记录
+			return "success";
+		}
+		return null;
+	}
 }
