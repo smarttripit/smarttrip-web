@@ -10,12 +10,15 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.smarttrip.platform.file.AliyunFileManager;
 
 
 /**
@@ -27,6 +30,9 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/file")
 public class FileController {
 	private Logger logger = LoggerFactory.getLogger(FileController.class);
+	
+	@Autowired
+	AliyunFileManager aliyunFileManager;
 	
 	/**
 	 * 跳转到文件上传页面
@@ -96,6 +102,19 @@ public class FileController {
 	private String saveFile(MultipartFile fileUpload){
 		String fileName = fileUpload.getOriginalFilename();
 		fileUpload.getContentType();
+		try {
+			aliyunFileManager.upload(fileName, fileUpload.getBytes());
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		return "ok";
+	}
+	
+	
+	/*private String saveFile(MultipartFile fileUpload){
+		String fileName = fileUpload.getOriginalFilename();
+		fileUpload.getContentType();
 		File file =  new File("E:/08file/" + fileName);
 		try {
 			FileUtils.writeByteArrayToFile(file, fileUpload.getBytes());
@@ -105,5 +124,5 @@ public class FileController {
 		}
 		
 		return "ok";
-	}
+	}*/
 }
