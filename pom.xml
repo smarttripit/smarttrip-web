@@ -160,7 +160,6 @@
 		<dependency>
 			<groupId>com.smarttrip</groupId>
 			<artifactId>platform-file</artifactId>
-			<version>${platform.version}</version>
 		</dependency>
 	</dependencies>
 
