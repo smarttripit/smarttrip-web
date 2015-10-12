@@ -1,13 +1,11 @@
 package com.smarttrip.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.smarttrip.platform.file.AliyunFileManager;
-
 
 /**
  * 文件上传和下载
@@ -54,6 +51,7 @@ public class FileController {
 	public Map<String, String> uploadNotExe(HttpServletRequest request,Model model,
 			@RequestParam(value="fileUpload") MultipartFile fileUpload,
 			@RequestParam(value="title") String title){
+		logger.debug("uploadNotExe--开始");
 		Map<String, String> rtn = new HashMap<String, String>();
 		rtn.put("status", "success");
 		rtn.put("tips", "文件上传成功");
@@ -77,7 +75,7 @@ public class FileController {
 			rtn.put("tips", saveResultString);
 			return rtn;
 		}
-		
+		logger.debug("uploadNotExe--结束");
 		return rtn;
 	}
 	
@@ -88,9 +86,9 @@ public class FileController {
 	 */
 	private String validateUploadFile(MultipartFile fileUpload){
 		if(fileUpload.isEmpty()){
+			logger.info("上传的文件内容为空");;
 			return "上传的文件为空";
 		}
-		
 		return "ok";
 	}
 	
@@ -100,6 +98,7 @@ public class FileController {
 	 * @return
 	 */
 	private String saveFile(MultipartFile fileUpload){
+		logger.debug("saveFile-开始");
 		String fileName = fileUpload.getOriginalFilename();
 		fileUpload.getContentType();
 		try {
@@ -107,22 +106,7 @@ public class FileController {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		
+		logger.debug("saveFile-结束");
 		return "ok";
 	}
-	
-	
-	/*private String saveFile(MultipartFile fileUpload){
-		String fileName = fileUpload.getOriginalFilename();
-		fileUpload.getContentType();
-		File file =  new File("E:/08file/" + fileName);
-		try {
-			FileUtils.writeByteArrayToFile(file, fileUpload.getBytes());
-		} catch (IOException e) {
-			logger.error("保存上传的文件出错", e);
-			return "保存上传的文件的时候出错";
-		}
-		
-		return "ok";
-	}*/
 }
