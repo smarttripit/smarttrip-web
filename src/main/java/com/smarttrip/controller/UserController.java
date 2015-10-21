@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.smarttrip.common.Result;
 import com.smarttrip.domain.User;
 import com.smarttrip.service.IUserService;
 
@@ -27,10 +28,13 @@ public class UserController {
 	
 	@RequestMapping("/showUserJson")
 	@ResponseBody
-	public User showUserJson(HttpServletRequest request,Model model){
+	public Result showUserJson(HttpServletRequest request,Model model){
 		String userId = request.getParameter("id");
 		User user = this.userService.selectByPrimaryKey(userId);
-		return user;
+		Result rtn = new Result();
+		rtn.setStatus("success");
+		rtn.setData(user);
+		return rtn;
 	}
 	
 	@RequestMapping("/gotoLogin")
