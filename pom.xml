@@ -174,7 +174,7 @@
 					<webAppSourceDirectory>src/main/webapp</webAppSourceDirectory>
 					<scanIntervalSeconds>3</scanIntervalSeconds>
 					<webApp>
-						<contextPath>/smarttrip-web</contextPath>
+						<contextPath></contextPath>
 					</webApp>
 					<connectors>
 						<!-- jetty7.0.0.1beta3版本之后要配置org.eclipse.jetty.server.nio.SelectChannelConnector -->
