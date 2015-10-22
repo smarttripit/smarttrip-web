@@ -1,6 +1,7 @@
 package com.smarttrip.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -8,21 +9,26 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.smarttrip.common.Result;
 import com.smarttrip.domain.Theme;
 import com.smarttrip.domain.Visitor;
 import com.smarttrip.domain.VisitorTheme;
 import com.smarttrip.service.IThemeService;
 import com.smarttrip.service.IVisitorService;
 import com.smarttrip.service.IVisitorThemeService;
+import com.smarttrip.util.MD5Utils;
+import com.smarttrip.util.UUIDUtils;
 
 @Controller
 @RequestMapping("/visitor")
-
+@ResponseBody
 public class VisitorController {
 	@Autowired
 	private IVisitorService visitorService;
@@ -33,11 +39,16 @@ public class VisitorController {
 	 * 登录页
 	 * 根据手机号/邮箱和密码登陆
 	 */
-	@RequestMapping("/visitor/login")
-	public String login(HttpServletRequest request,Model model){
+	@RequestMapping("/login")
+	public Result login(HttpServletRequest request,HttpSession session,Model model){
 		Visitor visitor = new Visitor();
+		Result result = new Result();
 		String userName = request.getParameter("userName");
 		String password = request.getParameter("password");
+		if(userName == null||password == null){
+			result.setStatus("fail");
+			result.setTipMsg("用户名或密码为空");
+		}else {
 		Pattern patternPhone = Pattern.compile("^1[34589]\\d{9}$");
 		Matcher matcherPhone = patternPhone.matcher(userName);
 		Pattern patternEmail = Pattern.compile("^[0-9a-zA-Z_]+@[0-9a-zA-Z]+\\.[a-zA-Z]+$");
@@ -49,13 +60,22 @@ public class VisitorController {
 		}else{
 			visitor = this.visitorService.selectByName(userName);
 		}
-		if (visitor == null) 
-			return "login";
-		if (visitor.getPassword().equals(password)){
-			//session 中记录
-			return "success";
+		if (visitor == null){ 
+			result.setStatus("fail");
+			result.setTipCode("login");
+			result.setTipMsg("用户名不存在");
 		}
-		return null;	
+		else if (visitor.getPassword().equals(password)){
+			//session 中记录
+			result.setStatus("success");
+			session.setAttribute("visitorId", visitor.getVisitorId());
+		}
+		result.setStatus("fail");
+		result.setTipCode("login");
+		result.setTipMsg("密码错误");
+		}
+		return result;
+		
 	}
 	
 	/*
@@ -63,43 +83,96 @@ public class VisitorController {
 	 */
 	
 	//在注册页面，填写完用户名之后要检查该用户名是否已经被注册
-	@RequestMapping("/visitor/isNameRegister")
-	public boolean isNameRegister(HttpServletRequest request,Model model){
+	@RequestMapping("/isNameRegister")
+	public Result isNameRegister(HttpServletRequest request,Model model){
+		Result result = new Result();
 		String name = request.getParameter("name");
+		if(name == null){
+			result.setStatus("fail");
+			result.setTipMsg("用户名为空");
+		} else {
 		Visitor visitor = this.visitorService.selectByName(name);
-		return ((visitor == null||visitor.equals("")));
+		if(visitor == null){
+			result.setStatus("true");
+			result.setTipMsg("用户名未注册");
+		}else{
+			result.setStatus("false");
+			result.setTipMsg("用户名已经被注册");
+		}
+		}
+		return result;
 	}
 	
 	//在注册页面，用户输入手机号之后要检查该手机号是否已经被注册。
-	@RequestMapping("/visitor/isMobileNoRegister")
-	public boolean isMobileNoRegister(HttpServletRequest request,Model model){
+	@RequestMapping("/isMobileNoRegister")
+	public Result isMobileNoRegister(HttpServletRequest request,Model model){
+		Result result = new Result();
 		String mobileNo = request.getParameter("mobileNo");
+		if(mobileNo == null) {
+			result.setStatus("fail");
+			result.setTipMsg("手机号为空");
+		} else {
 		Visitor visitor = this.visitorService.selectByMobileNo(mobileNo);
-		return ((visitor == null||visitor.equals("")));
+		if(visitor == null){
+			result.setStatus("true");
+			result.setTipMsg("手机号未注册");
+		}else{
+			result.setStatus("false");
+			result.setTipMsg("手机号已经被注册");
+		}
+		}
+		return result;
 	}
 	
 	//提交注册时检查
-	@RequestMapping("/visitor/register")
-	public int register(HttpServletRequest request,Model model){
+	@RequestMapping("/register")
+	public Result register(HttpServletRequest request,HttpSession session,Model model){
+		Result result = new Result();
 		String name = request.getParameter("name");
 		String mobileNo = request.getParameter("mobileNo");
 		String password = request.getParameter("password");
 		String passwordAgain = request.getParameter("passwordAgain");
 		String verifyCode = request.getParameter("verifyCode");
-		if(this.nameCheck(name)
-				&&!this.nameReg(name)
-				&&this.mobileNoCheck(mobileNo)
-				&&!this.mobileNoReg(mobileNo)
-			    &&this.verifyCodeCheck(verifyCode)
-			    &&this.passwordCheck(password, passwordAgain)){
+		if (name ==null ||mobileNo ==null ||password == null ||passwordAgain ==null || verifyCode == null){
+			result.setStatus("fail");
+			result.setTipMsg("出现空值");
+			return result;
+		}
+	if(true){
+//		if(this.nameCheck(name)
+//				&&!this.nameReg(name)
+//				&&this.mobileNoCheck(mobileNo)
+//				&&!this.mobileNoReg(mobileNo)
+//			    &&this.verifyCodeCheck(verifyCode)
+//			    &&this.passwordCheck(password, passwordAgain)){
 			Visitor visitor = new Visitor();
+			String visitorId = UUIDUtils.getUUID();
+			String salt = UUIDUtils.getUUID();
+			String registerTime = DateFormatUtils.format(new Date(), "yyyy:mm:dd HH:mm:ss");
+			visitor.setVisitorId(visitorId);
 			visitor.setName(name);
 			visitor.setMobileNo(mobileNo);
-			visitor.setPassword(passwordAgain);
-			return (this.visitorService.insert(visitor));
+			visitor.setPassword(MD5Utils.encrypt(password + salt));
+			visitor.setSalt(salt);
+			visitor.setRegisterTime(registerTime);
+			visitor.setEmailActivated("0");
+			visitor.setStatus("1");
+			visitor.setBirthdaySecret("1");
+			if (this.visitorService.insert(visitor)!=0){
+				result.setStatus("success");
+				session.setAttribute("visitorId", this.visitorService.selectByMobileNo(mobileNo).getVisitorId());
+				return result;
+			} else {
+				result.setStatus("fail");
+				result.setTipMsg("注册不成功");
+				return result;
+			}	
 		}
-		else 
-			return 0;	
+		else {
+			result.setStatus("fail");
+			result.setTipMsg("出现不合法注册字符或出现已注册内容");
+			return result;
+		}	
 	}
 	//注册页依赖函数
 	public boolean nameCheck(String name) {
@@ -138,7 +211,7 @@ public class VisitorController {
 	 */
 	
 	//读取游客信息
-	@RequestMapping("/visitor/showVisitorInfo")
+	@RequestMapping("/showVisitorInfo")
 	public List<Object> showVisitorInfo(HttpServletRequest request,Model model){
 		HttpSession session = request.getSession();
 		String visitorId = (String)session.getAttribute("visitorId");
