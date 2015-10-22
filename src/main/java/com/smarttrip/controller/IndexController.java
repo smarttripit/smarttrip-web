@@ -21,4 +21,6 @@ public class IndexController {
 		model.addAttribute("contextPath", contextPath);
 		return "index";
 	}
+	
+	
 }
