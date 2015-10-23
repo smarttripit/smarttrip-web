@@ -1,5 +1,6 @@
 package com.smarttrip.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,5 +38,25 @@ public class ScheduleController {
 			result.setData(record);
 		}
 		return result;
+	}
+	
+	@RequestMapping("/description")
+	@ResponseBody
+	public Result readDescription(HttpServletRequest request,Model model){
+		String scheduleId = request.getParameter("scheduleId");
+		Schedule schedule = scheduleService.selectByPrimaryKey(scheduleId);
+		Result result = new Result();
+		if (schedule == null){
+			result.setStatus("failed");
+			return result;
+		}
+		else{
+			List<Object> record = new ArrayList<>();
+			record.add(schedule.getDescription());
+			record.add(schedule.getLink());
+			result.setData(record);
+			return result;
+		}
+		
 	}
 }
