@@ -28,7 +28,6 @@ import com.smarttrip.util.UUIDUtils;
 
 @Controller
 @RequestMapping("/visitor")
-@ResponseBody
 public class VisitorController {
 	@Autowired
 	private IVisitorService visitorService;
@@ -40,19 +39,22 @@ public class VisitorController {
 	 * 根据手机号/邮箱和密码登陆
 	 */
 	@RequestMapping("/login")
+	@ResponseBody
 	public Result login(HttpServletRequest request,HttpSession session,Model model){
 		Visitor visitor = new Visitor();
 		Result result = new Result();
 		String userName = request.getParameter("userName");
 		String password = request.getParameter("password");
-		if(userName == null||password == null){
+		if(userName == null ||userName.equals("")||password == null || password.equals("")){
 			result.setStatus("fail");
 			result.setTipMsg("用户名或密码为空");
-		}else {
+			return result;
+		}
 		Pattern patternPhone = Pattern.compile("^1[34589]\\d{9}$");
 		Matcher matcherPhone = patternPhone.matcher(userName);
 		Pattern patternEmail = Pattern.compile("^[0-9a-zA-Z_]+@[0-9a-zA-Z]+\\.[a-zA-Z]+$");
 		Matcher matcherEmail = patternEmail.matcher(userName);
+		
 		if(matcherPhone.matches()){
 			visitor = this.visitorService.selectByMobileNo(userName);	
 		}else if(matcherEmail.matches()){
@@ -60,22 +62,25 @@ public class VisitorController {
 		}else{
 			visitor = this.visitorService.selectByName(userName);
 		}
+		
 		if (visitor == null){ 
 			result.setStatus("fail");
 			result.setTipCode("login");
 			result.setTipMsg("用户名不存在");
+			return result;
 		}
-		else if (visitor.getPassword().equals(password)){
+		
+		if (visitor.getPassword().equals(MD5Utils.encrypt(password+visitor.getSalt()))){
 			//session 中记录
 			result.setStatus("success");
 			session.setAttribute("visitorId", visitor.getVisitorId());
+			return result;
 		}
+		
 		result.setStatus("fail");
 		result.setTipCode("login");
 		result.setTipMsg("密码错误");
-		}
-		return result;
-		
+		return result;	
 	}
 	
 	/*
@@ -84,6 +89,7 @@ public class VisitorController {
 	
 	//在注册页面，填写完用户名之后要检查该用户名是否已经被注册
 	@RequestMapping("/isNameRegister")
+	@ResponseBody
 	public Result isNameRegister(HttpServletRequest request,Model model){
 		Result result = new Result();
 		String name = request.getParameter("name");
@@ -105,6 +111,7 @@ public class VisitorController {
 	
 	//在注册页面，用户输入手机号之后要检查该手机号是否已经被注册。
 	@RequestMapping("/isMobileNoRegister")
+	@ResponseBody
 	public Result isMobileNoRegister(HttpServletRequest request,Model model){
 		Result result = new Result();
 		String mobileNo = request.getParameter("mobileNo");
@@ -126,7 +133,8 @@ public class VisitorController {
 	
 	//提交注册时检查
 	@RequestMapping("/register")
-	public Result register(HttpServletRequest request,HttpSession session,Model model){
+	@ResponseBody
+	public Result register(HttpServletRequest request , HttpSession session,Model model){
 		Result result = new Result();
 		String name = request.getParameter("name");
 		String mobileNo = request.getParameter("mobileNo");
@@ -138,13 +146,13 @@ public class VisitorController {
 			result.setTipMsg("出现空值");
 			return result;
 		}
-	if(true){
-//		if(this.nameCheck(name)
-//				&&!this.nameReg(name)
-//				&&this.mobileNoCheck(mobileNo)
-//				&&!this.mobileNoReg(mobileNo)
-//			    &&this.verifyCodeCheck(verifyCode)
-//			    &&this.passwordCheck(password, passwordAgain)){
+	
+		if(this.nameCheck(name)
+				&&this.nameReg(name)
+				&&this.mobileNoCheck(mobileNo)
+				&&this.mobileNoReg(mobileNo)
+			    &&this.verifyCodeCheck(verifyCode)
+			    &&this.passwordCheck(password, passwordAgain)){
 			Visitor visitor = new Visitor();
 			String visitorId = UUIDUtils.getUUID();
 			String salt = UUIDUtils.getUUID();
@@ -157,7 +165,7 @@ public class VisitorController {
 			visitor.setRegisterTime(registerTime);
 			visitor.setEmailActivated("0");
 			visitor.setStatus("1");
-			visitor.setBirthdaySecret("1");
+			visitor.setBirthdaySecret("0");
 			if (this.visitorService.insert(visitor)!=0){
 				result.setStatus("success");
 				session.setAttribute("visitorId", this.visitorService.selectByMobileNo(mobileNo).getVisitorId());
@@ -201,7 +209,7 @@ public class VisitorController {
 	}
 	
 	public boolean mobileNoReg(String mobileNo) {
-		Visitor visitor = this.visitorService.selectByName(mobileNo);
+		Visitor visitor = this.visitorService.selectByMobileNo(mobileNo);
 		return ((visitor == null||visitor.equals("")));
 	}
 	
@@ -212,31 +220,99 @@ public class VisitorController {
 	
 	//读取游客信息
 	@RequestMapping("/showVisitorInfo")
-	public List<Object> showVisitorInfo(HttpServletRequest request,Model model){
-		HttpSession session = request.getSession();
-		String visitorId = (String)session.getAttribute("visitorId");
+	@ResponseBody
+	public Result showVisitorInfo(HttpServletRequest request,HttpSession session,Model model){ 
+		Result result = new Result();
+		Object id = session.getAttribute("visitorId");
+		if( id == null || id.toString().equals("")){
+			result.setStatus("fail");
+			result.setTipMsg("游客未登陆");
+			return result;
+		}
+		String visitorId = (String)id;
 		Visitor visitor = this.visitorService.selectByPrimaryKey(visitorId);
+		if( visitor == null){
+			result.setStatus("fail");
+			result.setTipMsg("不存在该visitorId的用户");
+			return result;
+		}
 		List<VisitorTheme> visitorThemes = this.visitorThemeService.selectByVisitorId(visitorId);
 		List<Theme> themes = new ArrayList<Theme>();
+		if(visitorThemes != null){
 		for(VisitorTheme visitorTheme : visitorThemes){
 		String themeId = visitorTheme.getThemeId();
 		Theme theme = this.themeService.selectByPrimaryKey(themeId);
 		themes.add(theme);
 		}
+		}
+		else{
+			themes = null;
+		}
 		List<Object> visitorInfo = new ArrayList<Object>();
+		visitorInfo.add(visitor.getRealName());
+		visitorInfo.add(visitor.getRealNameSecret());
+		visitorInfo.add(visitor.getGender());
+		visitorInfo.add(visitor.getBirthday());
+		visitorInfo.add(visitor.getBirthdaySecret());
 		visitorInfo.add(visitor.getCity());
+		visitorInfo.add(visitor.getProfession());
+		visitorInfo.add(visitor.getEducation());
+		visitorInfo.add(visitor.getIntroduction());
+		visitorInfo.add(visitor.getWebsite());
 		visitorInfo.add(themes);
-		return visitorInfo;
-		
-		//return list	此处一个visitorId可能对应多个theme，需要修改
+		result.setStatus("success");
+		result.setData(visitorInfo);
+		return result;
 	}
 	
-//	@RequestMapping("/visitor/modifyVisitorInfo")
-//	public boolean modifyVisitorInfo(HttpServletRequest request,Model model){
-//		String realName = request.getParameter("realName");
-//		String realNameSecret = request.getParameter("realNameSecret");
-//		String gender = request.getParameter("gender");
-//		
-//	}
+	@RequestMapping("/modifyVisitorInfo")
+	@ResponseBody
+	public Result modifyVisitorInfo(HttpServletRequest request, HttpSession session , Model model){
+		Result result = new Result();
+		Visitor visitor = new Visitor();
+		Object id = session.getAttribute("visitorId");
+		if( id == null || id.toString().equals("")){
+			result.setStatus("fail");
+			result.setTipMsg("游客未登陆");
+			return result;
+		}
+		String visitorId = (String)id;
+		String realName = request.getParameter("realName");
+		String realNameSecret = request.getParameter("realNameSecret");
+		String gender = request.getParameter("gender");
+		String birthday = request.getParameter("birthday");
+		String birthdaySecret = request.getParameter("birthdaySecret");
+		String city = request.getParameter("city");
+		String profession = request.getParameter("profession");
+		String education = request.getParameter("education");
+		String introduction = request.getParameter("introduction");
+		String website = request.getParameter("website");
+		String[] themeNames =request.getParameterValues("themeNames");
+		visitor.setVisitorId(visitorId);
+		visitor.setRealName(realName);
+		visitor.setRealNameSecret(realNameSecret);
+		visitor.setGender(gender);
+		visitor.setBirthday(birthday);
+		visitor.setBirthdaySecret(birthdaySecret);
+		visitor.setCity(city);
+		visitor.setProfession(profession);
+		visitor.setEducation(education);
+		visitor.setIntroduction(introduction);
+		visitor.setWebsite(website);
+		if(themeNames!= null){
+			for(String name : themeNames){
+			Theme theme = this.themeService.selectByName(name);
+			this.visitorThemeService.deleteByVisitorId(visitorId);
+				VisitorTheme visitorTheme = new VisitorTheme();
+				visitorTheme.setId(UUIDUtils.getUUID());
+				visitorTheme.setVisitorId(visitorId);
+				visitorTheme.setThemeId(theme.getThemeId());
+				this.visitorThemeService.insert(visitorTheme);
+			}
+		}
+		this.visitorService.updateByPrimaryKey(visitor);
+		result.setStatus("success");
+		return result;
+	}
 
 }
