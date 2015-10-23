@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.http.HttpRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -97,4 +96,20 @@ public class RouteController {
 		return result;
 	}
 	
+	@RequestMapping("/details")
+	@ResponseBody
+	public Result toDetails(HttpServletRequest request,Model model){
+		Result result = new Result();
+		String routeId = request.getParameter("routeId");
+		Route record = routeService.selectByPrimaryKey(routeId);
+		if (record == null){
+			result.setStatus("failed");
+		}
+		else{
+			result.setData(record);
+		}
+		return result;
+		
+	}
+
 }
