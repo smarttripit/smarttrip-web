@@ -301,7 +301,7 @@ public class VisitorController {
 		visitor.setWebsite(website);
 		if(themeNames!= null){
 			for(String name : themeNames){
-			Theme theme = this.themeService.selectByName(name);
+			Theme theme = this.themeService.selectByThemeName(name);
 			this.visitorThemeService.deleteByVisitorId(visitorId);
 				VisitorTheme visitorTheme = new VisitorTheme();
 				visitorTheme.setId(UUIDUtils.getUUID());
