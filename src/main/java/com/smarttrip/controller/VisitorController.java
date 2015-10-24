@@ -3,6 +3,7 @@ package com.smarttrip.controller;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +22,7 @@ import com.smarttrip.common.SessionUtil;
 import com.smarttrip.domain.Theme;
 import com.smarttrip.domain.Visitor;
 import com.smarttrip.domain.VisitorTheme;
+import com.smarttrip.service.IPhoneAuthCodeService;
 import com.smarttrip.service.IThemeService;
 import com.smarttrip.service.IVisitorService;
 import com.smarttrip.service.IVisitorThemeService;
@@ -36,7 +38,8 @@ public class VisitorController {
 	private IVisitorThemeService visitorThemeService;
 	@Autowired
 	private IThemeService themeService;
-	
+	@Autowired
+	private IPhoneAuthCodeService phoneAuthCodeService;
 	/*
 	 * 登录页
 	 * 根据手机号/邮箱和密码登陆
@@ -170,16 +173,20 @@ public class VisitorController {
 			result.setTipMsg("手机号已注册");
 			return result;
 		}
-		if(!this.verifyCodeCheck(verifyCode)){
-			result.setStatus("fail");
-			result.setTipMsg("验证码不正确");
-			return result;
-		}
 		if(!this.passwordCheck(password, passwordAgain)){
 			result.setStatus("fail");
 			result.setTipMsg("两次输入密码不相同");
 			return result;
 		}
+		
+		Map<String,String>verifyCodeCheckResult = phoneAuthCodeService.verify(mobileNo,verifyCode);
+		if(!verifyCodeCheckResult.get("result").equals("right")){
+			result.setStatus("failed");
+			result.setTipCode(verifyCodeCheckResult.get("result"));
+			result.setTipMsg(verifyCodeCheckResult.get("tipMsg"));
+			return result;
+		}
+		
 		Visitor visitor = new Visitor();
 		String visitorId = UUIDUtils.getUUID();
 		String salt = UUIDUtils.getUUID();
@@ -212,11 +219,7 @@ public class VisitorController {
 		Matcher matcherMobileNo = patternMobileNo.matcher(mobileNo);
 		return matcherMobileNo.matches();
 	}
-	
-	public boolean verifyCodeCheck(String verifyCode) {
-		return true;
-	}
-	
+
 	public boolean passwordCheck(String password , String passwordAgain ) {
 		return (password.length() >= 6 && password.equals(passwordAgain));
 	}
