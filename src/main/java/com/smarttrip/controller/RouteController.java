@@ -81,40 +81,40 @@ public class RouteController {
 		return result;
 	}
 	
-	@RequestMapping("/condition")
-	@ResponseBody
-	public Result toRouteInConditions(HttpServletRequest request,Model model){
-		Result result = new Result();
-		String firstRegion = request.getParameter("firstRegion");
-		String secondRegion =  request.getParameter("secondRegion");
-		String theme = request.getParameter("theme");
-		String periodString = request.getParameter("period");
-		if (firstRegion == null && secondRegion ==null && theme == null && periodString == null){
-			result.setStatus("failed");
-			return result;
-		}
-		String[] secondRegions = secondRegion.split(",");
-		String[] themes = theme.split(",");
-		String[] periodStrings = periodString.split(",");
-		int[] periods = new int[periodStrings.length];
-		for (int i = 0; i < periods.length; i++){
-			periods[i] = Integer.parseInt(periodStrings[i]);
-		}
-		
-		List<Route> record = new ArrayList<>();
-		for (int i = 0 ; i < secondRegions.length || i == 0; i++){
-			for (int j = 0; j < themes.length || j == 0; j++){
-				for (int k = 0; k < periods.length || k == 0; k++){
-					record.addAll(routeService.selectByConditions(firstRegion, secondRegions[i], themes[i], periods[i]));
-				}	
-			}
-		}
-		
-		
-		int period = Integer.parseInt(periodString);
-		result.setData(routeService.selectByConditions(firstRegion, secondRegion, theme, period));
-		return result;
-	}
+//	@RequestMapping("/condition")
+//	@ResponseBody
+//	public Result toRouteInConditions(HttpServletRequest request,Model model){
+//		Result result = new Result();
+//		String firstRegion = request.getParameter("firstRegion");
+//		String secondRegion =  request.getParameter("secondRegion");
+//		String theme = request.getParameter("theme");
+//		String periodString = request.getParameter("period");
+//		if (firstRegion == null && secondRegion ==null && theme == null && periodString == null){
+//			result.setStatus("failed");
+//			return result;
+//		}
+//		String[] secondRegions = secondRegion.split(",");
+//		String[] themes = theme.split(",");
+//		String[] periodStrings = periodString.split(",");
+//		int[] periods = new int[periodStrings.length];
+//		for (int i = 0; i < periods.length; i++){
+//			periods[i] = Integer.parseInt(periodStrings[i]);
+//		}
+//		
+//		List<Route> record = new ArrayList<>();
+//		for (int i = 0 ; i < secondRegions.length || i == 0; i++){
+//			for (int j = 0; j < themes.length || j == 0; j++){
+//				for (int k = 0; k < periods.length || k == 0; k++){
+//					record.addAll(routeService.selectByConditions(firstRegion, secondRegions[i], themes[i], periods[i]));
+//				}	
+//			}
+//		}
+//		
+//		
+//		int period = Integer.parseInt(periodString);
+//		result.setData(routeService.selectByConditions(firstRegion, secondRegion, theme, period));
+//		return result;
+//	}
 	
 	@RequestMapping("/details")
 	@ResponseBody
@@ -153,10 +153,12 @@ public class RouteController {
 		int[] period = new int[periodStrings.length];
 		for (int i = 0; i < periodStrings.length; i++){
 			period[i] = new Integer(Integer.parseInt(periodStrings[i]));
+			System.out.println("period is "+ period[i]);
 		}
 		List<String> regionId = regionService.selectRegionId(firstRegion, secondRegion);
-		
-		List<Route> record = routeService.selectByConditions(regionId, theme, period, pageNum, pageSize, sortField);
+		List<String> themeId = themeService.selectByThemeName(theme);
+		List<String> routeId = routeThemeService.selectRouteId(themeId);
+		List<Route> record = routeService.selectByConditions(regionId, routeId, period, pageNum, pageSize, sortField);
 		result.setData(record);
 		return result;
 	}
