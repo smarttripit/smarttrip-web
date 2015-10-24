@@ -209,7 +209,7 @@ public class VisitorController {
 	
 	//注册页依赖函数
 	public boolean nameCheck(String name) {
-		Pattern patternName = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]{4,15}$");
+		Pattern patternName = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]{2,20}$");
 		Matcher matcherName = patternName.matcher(name);
 		return matcherName.matches();
 	}
@@ -221,7 +221,7 @@ public class VisitorController {
 	}
 
 	public boolean passwordCheck(String password , String passwordAgain ) {
-		return (password.length() >= 6 && password.equals(passwordAgain));
+		return (password.length() >= 6 && password.length() <= 20 && password.equals(passwordAgain));
 	}
 	
 	public boolean nameReg(String name) {
