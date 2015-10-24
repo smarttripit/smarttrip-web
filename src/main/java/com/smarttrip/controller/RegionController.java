@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.smarttrip.common.Result;
 import com.smarttrip.domain.Region;
 import com.smarttrip.service.IRegionService;
 
@@ -28,13 +29,11 @@ public class RegionController {
 	
 	@RequestMapping("/city")
 	@ResponseBody
-	public List<String> readByCity(HttpServletRequest request,Model model){
+	public Result readByCity(HttpServletRequest request,Model model){
+		Result result = new Result();
 		String city = request.getParameter("city");
 		List<Region> record =  regionService.selectByFirstRegion(city);
-		List<String> area = new ArrayList<String>();
-		for (int i = 0; i < record.size(); i++){
-			area.add(record.get(i).getSecondRegion());
-		}
-		return area;
+		result.setData(record);
+		return result;
 	}
 }

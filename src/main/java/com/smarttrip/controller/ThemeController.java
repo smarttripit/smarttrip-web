@@ -1,6 +1,5 @@
 package com.smarttrip.controller;
 
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -8,7 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.smarttrip.domain.Theme;
+import com.smarttrip.common.Result;
 import com.smarttrip.service.IThemeService;
 
 /**
@@ -25,7 +24,9 @@ public class ThemeController {
 	
 	@RequestMapping("/all")
 	@ResponseBody
-	public List<Theme> readAllTheme(Model model){
-		return this.themeService.selectAll();
+	public Result readAllTheme(Model model){
+		Result result = new Result();
+		result.setData(this.themeService.selectAll());
+		return result;
 	}
 }
