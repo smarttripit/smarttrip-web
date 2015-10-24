@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.smarttrip.common.Result;
+import com.smarttrip.common.SessionUtil;
 import com.smarttrip.domain.Theme;
 import com.smarttrip.domain.Visitor;
 import com.smarttrip.domain.VisitorTheme;
@@ -31,7 +32,9 @@ import com.smarttrip.util.UUIDUtils;
 public class VisitorController {
 	@Autowired
 	private IVisitorService visitorService;
+	@Autowired
 	private IVisitorThemeService visitorThemeService;
+	@Autowired
 	private IThemeService themeService;
 	
 	/*
@@ -93,19 +96,19 @@ public class VisitorController {
 	public Result isNameRegister(HttpServletRequest request,Model model){
 		Result result = new Result();
 		String name = request.getParameter("name");
-		if(name == null){
+		if(name == null || name.equals("")){
 			result.setStatus("fail");
 			result.setTipMsg("用户名为空");
-		} else {
+			return result;
+		}
 		Visitor visitor = this.visitorService.selectByName(name);
 		if(visitor == null){
 			result.setStatus("true");
 			result.setTipMsg("用户名未注册");
-		}else{
+			return result;
+		}
 			result.setStatus("false");
 			result.setTipMsg("用户名已经被注册");
-		}
-		}
 		return result;
 	}
 	
@@ -115,19 +118,19 @@ public class VisitorController {
 	public Result isMobileNoRegister(HttpServletRequest request,Model model){
 		Result result = new Result();
 		String mobileNo = request.getParameter("mobileNo");
-		if(mobileNo == null) {
+		if(mobileNo == null||mobileNo.equals("")) {
 			result.setStatus("fail");
 			result.setTipMsg("手机号为空");
-		} else {
+			return result;
+		} 
 		Visitor visitor = this.visitorService.selectByMobileNo(mobileNo);
 		if(visitor == null){
 			result.setStatus("true");
 			result.setTipMsg("手机号未注册");
-		}else{
+			return result;
+		}
 			result.setStatus("false");
 			result.setTipMsg("手机号已经被注册");
-		}
-		}
 		return result;
 	}
 	
@@ -143,45 +146,60 @@ public class VisitorController {
 		String verifyCode = request.getParameter("verifyCode");
 		if (name ==null ||mobileNo ==null ||password == null ||passwordAgain ==null || verifyCode == null){
 			result.setStatus("fail");
-			result.setTipMsg("出现空值");
+			result.setTipMsg("注册信息不完整");
 			return result;
 		}
 	
-		if(this.nameCheck(name)
-				&&this.nameReg(name)
-				&&this.mobileNoCheck(mobileNo)
-				&&this.mobileNoReg(mobileNo)
-			    &&this.verifyCodeCheck(verifyCode)
-			    &&this.passwordCheck(password, passwordAgain)){
-			Visitor visitor = new Visitor();
-			String visitorId = UUIDUtils.getUUID();
-			String salt = UUIDUtils.getUUID();
-			String registerTime = DateFormatUtils.format(new Date(), "yyyy:mm:dd HH:mm:ss");
-			visitor.setVisitorId(visitorId);
-			visitor.setName(name);
-			visitor.setMobileNo(mobileNo);
-			visitor.setPassword(MD5Utils.encrypt(password + salt));
-			visitor.setSalt(salt);
-			visitor.setRegisterTime(registerTime);
-			visitor.setEmailActivated("0");
-			visitor.setStatus("1");
-			visitor.setBirthdaySecret("0");
-			if (this.visitorService.insert(visitor)!=0){
-				result.setStatus("success");
-				session.setAttribute("visitorId", this.visitorService.selectByMobileNo(mobileNo).getVisitorId());
-				return result;
-			} else {
-				result.setStatus("fail");
-				result.setTipMsg("注册不成功");
-				return result;
-			}	
-		}
-		else {
+		if(!this.nameCheck(name)){
 			result.setStatus("fail");
-			result.setTipMsg("出现不合法注册字符或出现已注册内容");
+			result.setTipMsg("用户名不符要求");
 			return result;
-		}	
+		}
+		if(!this.nameReg(name)){
+			result.setStatus("fail");
+			result.setTipMsg("用户名已注册");
+			return result;
+		}
+		if(!this.mobileNoCheck(mobileNo)){
+			result.setStatus("fail");
+			result.setTipMsg("手机号不符要求");
+			return result;
+		}
+		if(!this.mobileNoReg(mobileNo)){
+			result.setStatus("fail");
+			result.setTipMsg("手机号已注册");
+			return result;
+		}
+		if(!this.verifyCodeCheck(verifyCode)){
+			result.setStatus("fail");
+			result.setTipMsg("验证码不正确");
+			return result;
+		}
+		if(!this.passwordCheck(password, passwordAgain)){
+			result.setStatus("fail");
+			result.setTipMsg("两次输入密码不相同");
+			return result;
+		}
+		Visitor visitor = new Visitor();
+		String visitorId = UUIDUtils.getUUID();
+		String salt = UUIDUtils.getUUID();
+		String registerTime = DateFormatUtils.format(new Date(), "yyyy:mm:dd HH:mm:ss");
+		visitor.setVisitorId(visitorId);
+		visitor.setName(name);
+		visitor.setMobileNo(mobileNo);
+		visitor.setPassword(MD5Utils.encrypt(password + salt));
+		visitor.setSalt(salt);
+		visitor.setRegisterTime(registerTime);
+		visitor.setEmailActivated("0");
+		visitor.setStatus("1");
+		visitor.setBirthdaySecret("0");
+		this.visitorService.insert(visitor);
+		result.setStatus("success");
+		session.setAttribute("visitorId", this.visitorService.selectByMobileNo(mobileNo).getVisitorId());
+		return result;
 	}
+
+	
 	//注册页依赖函数
 	public boolean nameCheck(String name) {
 		Pattern patternName = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]{4,15}$");
@@ -223,13 +241,12 @@ public class VisitorController {
 	@ResponseBody
 	public Result showVisitorInfo(HttpServletRequest request,HttpSession session,Model model){ 
 		Result result = new Result();
-		Object id = session.getAttribute("visitorId");
-		if( id == null || id.toString().equals("")){
+		String visitorId = SessionUtil.getVisitorId(session);
+		if(visitorId == null){
 			result.setStatus("fail");
 			result.setTipMsg("游客未登陆");
 			return result;
 		}
-		String visitorId = (String)id;
 		Visitor visitor = this.visitorService.selectByPrimaryKey(visitorId);
 		if( visitor == null){
 			result.setStatus("fail");
@@ -269,25 +286,28 @@ public class VisitorController {
 	@ResponseBody
 	public Result modifyVisitorInfo(HttpServletRequest request, HttpSession session , Model model){
 		Result result = new Result();
-		Visitor visitor = new Visitor();
-		Object id = session.getAttribute("visitorId");
-		if( id == null || id.toString().equals("")){
+		String visitorId = SessionUtil.getVisitorId(session);
+		if( visitorId == null ){
 			result.setStatus("fail");
 			result.setTipMsg("游客未登陆");
 			return result;
 		}
-		String visitorId = (String)id;
 		String realName = request.getParameter("realName");
 		String realNameSecret = request.getParameter("realNameSecret");
 		String gender = request.getParameter("gender");
 		String birthday = request.getParameter("birthday");
 		String birthdaySecret = request.getParameter("birthdaySecret");
+		if(birthdaySecret == null||birthdaySecret.equals("")){
+			birthdaySecret = "0";
+		}
 		String city = request.getParameter("city");
 		String profession = request.getParameter("profession");
 		String education = request.getParameter("education");
 		String introduction = request.getParameter("introduction");
 		String website = request.getParameter("website");
-		String[] themeNames =request.getParameterValues("themeNames");
+		String themeId =request.getParameter("themeId");
+		
+		Visitor visitor =this.visitorService.selectByPrimaryKey(visitorId);
 		visitor.setVisitorId(visitorId);
 		visitor.setRealName(realName);
 		visitor.setRealNameSecret(realNameSecret);
@@ -299,18 +319,18 @@ public class VisitorController {
 		visitor.setEducation(education);
 		visitor.setIntroduction(introduction);
 		visitor.setWebsite(website);
-		if(themeNames!= null){
-			for(String name : themeNames){
-			Theme theme = this.themeService.selectByThemeName(name);
-			this.visitorThemeService.deleteByVisitorId(visitorId);
-				VisitorTheme visitorTheme = new VisitorTheme();
-				visitorTheme.setId(UUIDUtils.getUUID());
-				visitorTheme.setVisitorId(visitorId);
-				visitorTheme.setThemeId(theme.getThemeId());
-				this.visitorThemeService.insert(visitorTheme);
+		this.visitorService.updateByPrimaryKey(visitor);
+		this.visitorThemeService.deleteByVisitorId(visitorId);
+		if(themeId!= null){
+			String[] themeIds =themeId.split(",");
+			for(String id : themeIds){
+			VisitorTheme visitorTheme = new VisitorTheme();
+			visitorTheme.setId(UUIDUtils.getUUID());
+			visitorTheme.setVisitorId(visitorId);
+			visitorTheme.setThemeId(id);
+			this.visitorThemeService.insert(visitorTheme);
 			}
 		}
-		this.visitorService.updateByPrimaryKey(visitor);
 		result.setStatus("success");
 		return result;
 	}
