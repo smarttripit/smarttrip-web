@@ -1,5 +1,12 @@
 package com.smarttrip.common;
 
+/**
+ * 
+ * json返回数据类型. <br/>
+ * date: 2015年10月26日 上午9:34:50 <br/>
+ *
+ * @author songjiesdnu@163.com
+ */
 public class Result {
 	private String status = "success";
 	private String tipCode = "";

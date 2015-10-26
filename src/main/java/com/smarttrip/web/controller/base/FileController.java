@@ -1,4 +1,4 @@
-package com.smarttrip.controller;
+package com.smarttrip.web.controller.base;
 
 import java.io.IOException;
 import java.util.HashMap;
