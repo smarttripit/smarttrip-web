@@ -30,6 +30,9 @@ public class UserController {
 	@ResponseBody
 	public Result showUserJson(HttpServletRequest request,Model model){
 		String userId = request.getParameter("id");
+		if(userId.equals("0")){
+			throw new NullPointerException();
+		}
 		User user = this.userService.selectByPrimaryKey(userId);
 		Result rtn = new Result();
 		rtn.setStatus("success");

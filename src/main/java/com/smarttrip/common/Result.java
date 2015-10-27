@@ -8,6 +8,9 @@ package com.smarttrip.common;
  * @author songjiesdnu@163.com
  */
 public class Result {
+	public static String SUCCESS = "success";
+	public static String FAILED = "failed";
+	
 	private String status = "success";
 	private String tipCode = "";
 	private String tipMsg = "";
