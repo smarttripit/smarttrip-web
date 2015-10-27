@@ -2,7 +2,7 @@
  * Date:2015年10月27日上午9:19:13
  * Copyright (c) 2015, songjiesdnu@163.com All Rights Reserved.
  */
-package com.smarttrip.web.advice;
+package com.smarttrip.web.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
