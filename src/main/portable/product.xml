@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<portable-config>
+    <config-file path="applicationContext.xml">
+		<replace xpath="/beans/bean[@id='aliyunFileManager']/property[@name='accessKeyId']/@value">nJnORGJzdcGxfATe</replace>
+		<replace xpath="/beans/bean[@id='aliyunFileManager']/property[@name='accessKeySecret']/@value">QCf1uKEi5TFvAgiliOnkwjkNRhsoxC</replace>
+		<replace xpath="/beans/bean[@id='aliyunFileManager']/property[@name='endpoint']/@value">http://oss-cn-beijing.aliyuncs.com</replace>
+		<replace xpath="/beans/bean[@id='aliyunFileManager']/property[@name='bucketName']/@value">bucket-songjie1</replace>
+	</config-file>
+	
+	<config-file path="logback.xml">
+		<replace xpath="/configuration/root/@level">INFO</replace>
+		<!-- <replace xpath="/configuration/logger[@name='org.apache.zookeeper']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='org.I0Itec.zkclient']/@level">INFO</replace>
+
+		<replace xpath="/configuration/logger[@name='com.alibaba.dubbo']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='org.hibernate.validator']/@level">INFO</replace>
+
+		<replace xpath="/configuration/logger[@name='org.springframework.core']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='org.springframework.beans.factory']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='org.springframework.context']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='org.springframework.aop']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='org.springframework.jdbc']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='org.springframework.transaction.annotation']/@level">INFO</replace>
+
+
+		<replace xpath="/configuration/logger[@name='org.mybatis.spring']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='org.apache.ibatis']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='java.sql.Connection']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='java.sql.Statement']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='com.abchina.pancloud.integration']/@level">INFO</replace>
+		<replace xpath="/configuration/logger[@name='com.abchina.ibank.batch.job.base']/@level">INFO</replace>
+		
+		<replace xpath="/configuration/appender[@name='file—stdout']/rollingPolicy/FileNamePattern">/home/ibank/logs/ibank-service/stdout.%d{yyyy-MM-dd}_%i.log</replace>
+		<replace xpath="/configuration/appender[@name='file—error']/rollingPolicy/FileNamePattern">/home/ibank/logs/ibank-service/error.%d{yyyy-MM-dd}_%i.log</replace>
+		 -->
+	</config-file>
+</portable-config>
