@@ -76,13 +76,13 @@ public class ExceptionAdvice {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)  
     @ExceptionHandler(Exception.class)  
     public Result handleException(Exception e) {  
-        logger.error("服务运行异常[500]", e);  
+        logger.error("服务器异常[500]", e);  
         Result rtn = new Result();
         rtn.setStatus(Result.FAILED);
         rtn.setTipCode("500");
         String tipMsg = e.getMessage();
         if(tipMsg == null  ||  tipMsg.equals("")){
-        	tipMsg = "服务运行异常";
+        	tipMsg = "服务器异常";
         }
         rtn.setTipMsg(tipMsg);
         return rtn;
