@@ -157,7 +157,11 @@ public class RouteController {
 		}
 		List<String> regionId = regionService.selectRegionId(firstRegion, secondRegion);
 		List<String> themeId = themeService.selectByThemeName(theme);
-		List<String> routeId = routeThemeService.selectRouteId(themeId);
+		String[] themeIds = new String[themeId.size()];
+		for(int i = 0; i < themeId.size(); i++){
+			themeIds[i] = themeId.get(i);
+		}
+		List<String> routeId = routeThemeService.selectRouteId(themeIds);
 		List<Route> record = routeService.selectByConditions(regionId, routeId, period, pageNum, pageSize, sortField);
 		result.setData(record);
 		return result;
