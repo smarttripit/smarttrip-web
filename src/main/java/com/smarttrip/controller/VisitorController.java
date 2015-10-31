@@ -40,9 +40,40 @@ public class VisitorController {
 	private IThemeService themeService;
 	@Autowired
 	private IPhoneAuthCodeService phoneAuthCodeService;
-	/*
-	 * 登录页
+	
+	/**
+	 * 判断游客是否已经登录
+	 * @return
+	 */
+	@RequestMapping("/hasLogin")
+	@ResponseBody
+	public Result hasLogin(HttpSession session){
+		Result result = new Result();
+		if(!SessionUtil.hasLogin(session)){
+			result.setStatus(Result.FAILED);
+		}
+		return result;
+	}
+	
+	/**
+	 * 退出登录
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping("/logOut")
+	@ResponseBody
+	public Result logOut(HttpSession session){
+		Result result = new Result();
+		SessionUtil.logOut(session);
+		return result;
+	}
+	
+	/**
 	 * 根据手机号/邮箱和密码登陆
+	 * @param request
+	 * @param session
+	 * @param model
+	 * @return
 	 */
 	@RequestMapping("/login")
 	@ResponseBody
@@ -51,8 +82,9 @@ public class VisitorController {
 		Result result = new Result();
 		String userName = request.getParameter("userName");
 		String password = request.getParameter("password");
-		if(userName == null ||userName.equals("")||password == null || password.equals("")){
-			result.setStatus("fail");
+		if(userName == null || userName.equals("") || password == null || password.equals("")){
+			result.setStatus(Result.FAILED);
+			result.setTipCode("empty");
 			result.setTipMsg("用户名或密码为空");
 			return result;
 		}
@@ -70,74 +102,85 @@ public class VisitorController {
 		}
 		
 		if (visitor == null){ 
-			result.setStatus("fail");
-			result.setTipCode("login");
-			result.setTipMsg("用户名不存在");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("notCorrect");
+			result.setTipMsg("用户名或密码错误");
 			return result;
 		}
 		
 		if (visitor.getPassword().equals(MD5Utils.encrypt(password+visitor.getSalt()))){
 			//session 中记录
-			result.setStatus("success");
 			session.setAttribute("visitorId", visitor.getVisitorId());
 			return result;
 		}
 		
-		result.setStatus("fail");
-		result.setTipCode("login");
-		result.setTipMsg("密码错误");
+		result.setStatus(Result.FAILED);
+		result.setTipCode("notCorrect");
+		result.setTipMsg("用户名或密码错误");
 		return result;	
 	}
 	
-	/*
-	 * 注册页
+	/**
+	 * 在注册页面，填写完用户名之后要检查该用户名是否已经被注册
+	 * @param request
+	 * @param model
+	 * @return
 	 */
-	
-	//在注册页面，填写完用户名之后要检查该用户名是否已经被注册
 	@RequestMapping("/isNameRegister")
 	@ResponseBody
 	public Result isNameRegister(HttpServletRequest request,Model model){
 		Result result = new Result();
 		String name = request.getParameter("name");
 		if(name == null || name.equals("")){
-			result.setStatus("fail");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("emptyName");
 			result.setTipMsg("用户名为空");
 			return result;
 		}
 		Visitor visitor = this.visitorService.selectByName(name);
 		if(visitor == null){
-			result.setStatus("true");
-			result.setTipMsg("用户名未注册");
 			return result;
 		}
-			result.setStatus("false");
-			result.setTipMsg("用户名已经被注册");
+		result.setStatus(Result.FAILED);
+		result.setTipCode("hasRegistered");
+		result.setTipMsg("用户名已经被注册");
 		return result;
 	}
 	
-	//在注册页面，用户输入手机号之后要检查该手机号是否已经被注册。
+	/**
+	 * 在注册页面，用户输入手机号之后要检查该手机号是否已经被注册。
+	 * @param request
+	 * @param model
+	 * @return
+	 */
 	@RequestMapping("/isMobileNoRegister")
 	@ResponseBody
 	public Result isMobileNoRegister(HttpServletRequest request,Model model){
 		Result result = new Result();
 		String mobileNo = request.getParameter("mobileNo");
 		if(mobileNo == null||mobileNo.equals("")) {
-			result.setStatus("fail");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("emptyMobileNo");
 			result.setTipMsg("手机号为空");
 			return result;
 		} 
 		Visitor visitor = this.visitorService.selectByMobileNo(mobileNo);
 		if(visitor == null){
-			result.setStatus("true");
-			result.setTipMsg("手机号未注册");
 			return result;
 		}
-			result.setStatus("false");
-			result.setTipMsg("手机号已经被注册");
+		result.setStatus(Result.FAILED);
+		result.setTipCode("hasRegistered");
+		result.setTipMsg("手机号已经被注册");
 		return result;
 	}
 	
-	//提交注册时检查
+	/**
+	 * 提交注册时检查
+	 * @param request
+	 * @param session
+	 * @param model
+	 * @return
+	 */
 	@RequestMapping("/register")
 	@ResponseBody
 	public Result register(HttpServletRequest request , HttpSession session,Model model){
@@ -148,40 +191,46 @@ public class VisitorController {
 		String passwordAgain = request.getParameter("passwordAgain");
 		String verifyCode = request.getParameter("verifyCode");
 		if (name ==null ||mobileNo ==null ||password == null ||passwordAgain ==null || verifyCode == null){
-			result.setStatus("fail");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("lackRegisterInfo");
 			result.setTipMsg("注册信息不完整");
 			return result;
 		}
 	
 		if(!this.nameCheck(name)){
-			result.setStatus("fail");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("nameIllegal");
 			result.setTipMsg("用户名不符要求");
 			return result;
 		}
 		if(!this.nameReg(name)){
-			result.setStatus("fail");
-			result.setTipMsg("用户名已注册");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("nameHasBeenRegistered");
+			result.setTipMsg("用户名已被注册");
 			return result;
 		}
 		if(!this.mobileNoCheck(mobileNo)){
-			result.setStatus("fail");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("mobileNoIllegal");
 			result.setTipMsg("手机号不符要求");
 			return result;
 		}
 		if(!this.mobileNoReg(mobileNo)){
-			result.setStatus("fail");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("mobileNoHasBeenRegistered");
 			result.setTipMsg("手机号已注册");
 			return result;
 		}
 		if(!this.passwordCheck(password, passwordAgain)){
-			result.setStatus("fail");
-			result.setTipMsg("两次输入密码不相同");
+			result.setStatus(Result.FAILED);
+			result.setTipCode("passwordNotEqual");
+			result.setTipMsg("两次输入密码不一致");
 			return result;
 		}
 		
 		Map<String,String>verifyCodeCheckResult = phoneAuthCodeService.verify(mobileNo,verifyCode);
 		if(!verifyCodeCheckResult.get("result").equals("right")){
-			result.setStatus("failed");
+			result.setStatus(Result.FAILED);
 			result.setTipCode(verifyCodeCheckResult.get("result"));
 			result.setTipMsg(verifyCodeCheckResult.get("tipMsg"));
 			return result;
@@ -201,45 +250,43 @@ public class VisitorController {
 		visitor.setStatus("1");
 		visitor.setBirthdaySecret("0");
 		this.visitorService.insert(visitor);
-		result.setStatus("success");
 		session.setAttribute("visitorId", this.visitorService.selectByMobileNo(mobileNo).getVisitorId());
 		return result;
 	}
 
-	
-	//注册页依赖函数
-	public boolean nameCheck(String name) {
+	private boolean nameCheck(String name) {
 		Pattern patternName = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]{2,20}$");
 		Matcher matcherName = patternName.matcher(name);
 		return matcherName.matches();
 	}
 	
-	public boolean mobileNoCheck(String mobileNo) {
+	private boolean mobileNoCheck(String mobileNo) {
 		Pattern patternMobileNo = Pattern.compile("^1[34589]\\d{9}$");
 		Matcher matcherMobileNo = patternMobileNo.matcher(mobileNo);
 		return matcherMobileNo.matches();
 	}
 
-	public boolean passwordCheck(String password , String passwordAgain ) {
+	private boolean passwordCheck(String password , String passwordAgain ) {
 		return (password.length() >= 6 && password.length() <= 20 && password.equals(passwordAgain));
 	}
 	
-	public boolean nameReg(String name) {
+	private boolean nameReg(String name) {
 		Visitor visitor = this.visitorService.selectByName(name);
 		return ((visitor == null||visitor.equals("")));
 	}
 	
-	public boolean mobileNoReg(String mobileNo) {
+	private boolean mobileNoReg(String mobileNo) {
 		Visitor visitor = this.visitorService.selectByMobileNo(mobileNo);
 		return ((visitor == null||visitor.equals("")));
 	}
 	
-	
-	/*
-	 * 游客中心－游客个人信息
+	/**
+	 * 读取游客信息
+	 * @param request
+	 * @param session
+	 * @param model
+	 * @return
 	 */
-	
-	//读取游客信息
 	@RequestMapping("/showVisitorInfo")
 	@ResponseBody
 	public Result showVisitorInfo(HttpServletRequest request,HttpSession session,Model model){ 
