@@ -49,4 +49,14 @@ public class SessionUtil {
 		logger.debug("退出getVisitorId方法");
 		return visitorId;
 	}
+	
+	/**
+	 * 退出登录
+	 * @param session
+	 */
+	public static void logOut(HttpSession session){
+		logger.debug("进入logOut方法");
+		session.removeAttribute("visitorId");
+		logger.debug("退出logOut方法");
+	}
 }
