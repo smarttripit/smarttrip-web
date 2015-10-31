@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<portable-config>
+    <config-file path="WEB-INF/classes/applicationContext.xml">
+		<replace xpath="/beans/bean[@id='aliyunFileManager']/property[@name='accessKeyId']/@value">nJnORGJzdcGxfATe</replace>
+		<replace xpath="/beans/bean[@id='aliyunFileManager']/property[@name='accessKeySecret']/@value">QCf1uKEi5TFvAgiliOnkwjkNRhsoxC</replace>
+		<replace xpath="/beans/bean[@id='aliyunFileManager']/property[@name='endpoint']/@value">http://oss-cn-beijing.aliyuncs.com</replace>
+		<replace xpath="/beans/bean[@id='aliyunFileManager']/property[@name='bucketName']/@value">bucket-songjie</replace>
+	</config-file>
+	
+	<config-file path="WEB-INF/classes/logback.xml">
+		<replace xpath="/configuration/root/@level">DEBUG</replace>
+	</config-file>
+</portable-config>
